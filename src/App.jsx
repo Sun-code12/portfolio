@@ -277,7 +277,7 @@ export default function App() {
                     alt="Illustrated portrait of Khorshid Shira"
                     className="relative z-10 h-full w-full rounded-full border-[6px] border-white bg-white object-cover shadow-2xl dark:border-slate-700 dark:bg-slate-700"
                     fetchpriority="high"
-                    src="/images/hero.jpg"
+                    src={`${import.meta.env.BASE_URL}images/hero.jpg`}
                   />
                 </div>
                 {[
@@ -338,7 +338,7 @@ export default function App() {
                     alt="Full-length illustrated portrait of Khorshid"
                     className="h-full w-full object-cover object-top"
                     loading="lazy"
-                    src="/images/about.jpg"
+                    src={`${import.meta.env.BASE_URL}images/about.jpg`}
                   />
                 </div>
               </div>
@@ -403,7 +403,7 @@ export default function App() {
                   alt=""
                   className="h-full w-full object-cover object-top"
                   loading="lazy"
-                  src="/images/hero.jpg"
+                  src={`${import.meta.env.BASE_URL}images/hero.jpg`}
                 />
               </div>
             </StaggerItem>

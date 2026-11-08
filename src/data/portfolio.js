@@ -60,6 +60,8 @@ export const LANGUAGES = [
   { code: 'ES', name: 'Spanish', level: 'A2' },
 ]
 
+const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL
+
 export const PROJECTS = [
   {
     name: 'CozyNest',
@@ -70,7 +72,7 @@ export const PROJECTS = [
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/cozynest_e_commerce/',
     sourceUrl: 'https://github.com/Sun-code12/cozynest_e_commerce',
-    previewImage: '/images/projects/cozynest.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/cozynest.png`,
     artwork: {
       theme: 'interior',
       brand: 'cozynest',
@@ -90,7 +92,7 @@ export const PROJECTS = [
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/Hollow-Hive/',
     sourceUrl: 'https://github.com/Sun-code12/Hollow-Hive',
-    previewImage: '/images/projects/hollow-hive.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/hollow-hive.png`,
     artwork: {
       theme: 'architecture',
       brand: 'HOLLOW & HIVE',
@@ -110,7 +112,7 @@ export const PROJECTS = [
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/Fruits--And-Vegetables-website/',
     sourceUrl: 'https://github.com/Sun-code12/Fruits--And-Vegetables-website',
-    previewImage: '/images/projects/delicacy.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/delicacy.png`,
     artwork: {
       theme: 'grocery',
       brand: 'delicacy',
@@ -129,7 +131,7 @@ export const PROJECTS = [
     color: 'from-sky-400 to-indigo-500',
     category: 'Front-End',
     demoUrl: 'https://abrar-far.github.io/afghanistan-tour-guide/',
-    previewImage: '/images/projects/afghanistan-tour-guide.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/afghanistan-tour-guide.png`,
     artwork: {
       theme: 'afghanistan',
       brand: 'AFGHANISTAN, UNDISCOVERED',
@@ -148,7 +150,7 @@ export const PROJECTS = [
     color: 'from-slate-400 to-cyan-500',
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/blurry-loading/',
-    previewImage: '/images/projects/blurry-loading.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/blurry-loading.png`,
     artwork: {
       theme: 'loading',
       brand: 'STUDIO / LOADING',
@@ -167,7 +169,7 @@ export const PROJECTS = [
     color: 'from-orange-700 to-amber-500',
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/Coffee-Shop-Website/',
-    previewImage: '/images/projects/coffee-shop.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/coffee-shop.png`,
     artwork: {
       theme: 'coffee',
       brand: 'THE DAILY POUR',
@@ -186,7 +188,7 @@ export const PROJECTS = [
     color: 'from-violet-500 to-sky-400',
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/double-vertical-slider/',
-    previewImage: '/images/projects/double-vertical-slider.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/double-vertical-slider.png`,
     artwork: {
       theme: 'interior',
       brand: 'SLIDE / STUDIO',
@@ -205,7 +207,7 @@ export const PROJECTS = [
     color: 'from-red-700 to-slate-900',
     category: 'Front-End',
     demoUrl: 'https://sun-code12.github.io/Netflix/',
-    previewImage: '/images/projects/netflix.png',
+    previewImage: `${PUBLIC_ASSET_BASE}images/projects/netflix.png`,
     artwork: {
       theme: 'architecture',
       brand: 'STREAMBOX',
