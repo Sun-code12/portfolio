@@ -5,8 +5,9 @@ import {
   motion,
   useInView,
 } from 'framer-motion'
-import { ArrowUpRight, Code2, ExternalLink, X } from 'lucide-react'
+import { ArrowUpRight, Code2, ExternalLink, Search, X } from 'lucide-react'
 import { PROJECTS } from '../data/portfolio.js'
+import useDebounce from '../hooks/useDebounce.ts'
 import {
   Reveal,
   SpotlightTiltCard,
@@ -224,19 +225,44 @@ function ProjectCard({ project, onSelect }) {
 
 export default function ProjectGallery() {
   const [category, setCategory] = useState('All')
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedProject, setSelectedProject] = useState(null)
   const reducedMotion = usePortfolioReducedMotion()
   const gridRef = useRef(null)
   const gridInView = useInView(gridRef, { once: true, amount: 0.1 })
   const closeProject = useCallback(() => setSelectedProject(null), [])
-  const filteredProjects = category === 'All'
-    ? PROJECTS
-    : PROJECTS.filter((project) => project.category === category)
+  const debouncedSearchTerm = useDebounce(searchTerm.trim().toLowerCase(), 300)
+  const filteredProjects = PROJECTS.filter((project) => {
+    const matchesCategory = category === 'All' || project.category === category
+    const searchableText = [project.name, project.description, ...project.tags]
+      .join(' ')
+      .toLowerCase()
+    return matchesCategory && searchableText.includes(debouncedSearchTerm)
+  })
 
   return (
     <div>
       <Reveal className="mb-7">
         <LayoutGroup>
+          <div className="mx-auto mb-5 max-w-md">
+            <label className="sr-only" htmlFor="project-search">Search projects</label>
+            <div className="relative">
+              <Search
+                aria-hidden="true"
+                className="muted pointer-events-none absolute left-4 top-1/2 -translate-y-1/2"
+                size={18}
+              />
+              <input
+                autoComplete="off"
+                className="card w-full rounded-full py-3 pl-11 pr-5 text-sm outline-none transition focus:ring-2 focus:ring-sky-500/50"
+                id="project-search"
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search projects by name or technology"
+                type="search"
+                value={searchTerm}
+              />
+            </div>
+          </div>
           <div aria-label="Filter projects by category" className="flex flex-wrap justify-center gap-2" role="group">
             {CATEGORIES.map((item) => (
               <Magnetic key={item}>
@@ -292,8 +318,17 @@ export default function ProjectGallery() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <p className="font-semibold">WordPress projects coming soon.</p>
-              <p className="muted mt-1 text-sm">I’m learning and building with WordPress—check back for projects.</p>
+              {debouncedSearchTerm ? (
+                <>
+                  <p className="font-semibold">No projects found.</p>
+                  <p className="muted mt-1 text-sm">Try another search or category.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">WordPress projects coming soon.</p>
+                  <p className="muted mt-1 text-sm">I’m learning and building with WordPress—check back for projects.</p>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Send } from 'lucide-react'
+import { ValidationError, useForm } from '@formspree/react'
+
+const FORMSPREE_FORM_ID = 'mppdpnnq'
 
 const CONFETTI = Array.from({ length: 28 }, (_, index) => {
   const angle = (index / 28) * Math.PI * 2
@@ -16,20 +19,28 @@ const CONFETTI = Array.from({ length: 28 }, (_, index) => {
 export default function ContactForm() {
   const [values, setValues] = useState({ name: '', email: '', message: '' })
   const [errors, setErrors] = useState({})
-  const [submissionStatus, setSubmissionStatus] = useState('idle')
-  const [submissionMessage, setSubmissionMessage] = useState('')
-  const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
+  const [successName, setSuccessName] = useState('')
+  const submittedName = useRef('')
+  const [state, formspreeSubmit, resetForm] = useForm(FORMSPREE_FORM_ID)
+
+  useEffect(() => {
+    if (state.succeeded) {
+      setValues({ name: '', email: '', message: '' })
+      setErrors({})
+      setSuccessName(submittedName.current)
+    }
+  }, [state.succeeded])
 
   function handleChange(event) {
     const { name, value } = event.target
     setValues((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: '' }))
-    setSubmissionStatus('idle')
-    setSubmissionMessage('')
+    if (state.succeeded || state.errors) resetForm()
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault()
+  function handleSubmit(event) {
+    if (state.succeeded) resetForm()
+
     const nextErrors = {}
     if (!values.name.trim()) nextErrors.name = 'Please enter your name.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
@@ -38,70 +49,16 @@ export default function ContactForm() {
     if (!values.message.trim()) nextErrors.message = 'Please write a message.'
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) {
-      setSubmissionStatus('idle')
-      setSubmissionMessage('')
+      event.preventDefault()
       return
     }
 
-    if (!accessKey) {
-      setSubmissionStatus('error')
-      setSubmissionMessage(
-        'The contact form is not configured yet. Add your Web3Forms access key to VITE_WEB3FORMS_ACCESS_KEY.',
-      )
-      return
-    }
-
-    setSubmissionStatus('sending')
-    setSubmissionMessage('')
-
-    try {
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          access_key: accessKey,
-          subject: `New portfolio message from ${values.name.trim()}`,
-          from_name: values.name.trim(),
-          name: values.name.trim(),
-          email: values.email.trim(),
-          message: values.message.trim(),
-          botcheck: '',
-        }),
-      })
-      let result
-      try {
-        result = await response.json()
-      } catch {
-        throw new Error('The email service returned an unreadable response.')
-      }
-
-      if (!response.ok || result?.success !== true) {
-        setSubmissionStatus('error')
-        setSubmissionMessage(
-          result?.message || 'Your message could not be sent. Please try again later.',
-        )
-        return
-      }
-
-      setSubmissionStatus('success')
-      setSubmissionMessage(`Thanks, ${values.name.trim()}! Your message has been sent.`)
-      setValues({ name: '', email: '', message: '' })
-      setErrors({})
-    } catch (error) {
-      console.error('Unable to submit the Web3Forms contact form.', error)
-      setSubmissionStatus('error')
-      setSubmissionMessage(
-        error instanceof TypeError
-          ? 'We could not connect to the email service. Check your connection and try again.'
-          : error.message,
-      )
-    }
+    submittedName.current = values.name.trim()
+    setErrors({})
+    return formspreeSubmit(event)
   }
 
-  const submitted = submissionStatus === 'success'
+  const submitted = state.succeeded
 
   return (
     <div className="relative">
@@ -131,7 +88,7 @@ export default function ContactForm() {
         className="card grid gap-5 rounded-3xl p-6 sm:p-8"
         onSubmit={handleSubmit}
         noValidate
-        aria-busy={submissionStatus === 'sending'}
+        aria-busy={state.submitting}
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.12 }}
@@ -143,6 +100,8 @@ export default function ContactForm() {
           label="Your name"
           name="name"
           onChange={handleChange}
+          disabled={state.submitting}
+          serverErrors={state.errors}
           value={values.name}
         />
         <FloatingField
@@ -151,6 +110,8 @@ export default function ContactForm() {
           label="Your email"
           name="email"
           onChange={handleChange}
+          disabled={state.submitting}
+          serverErrors={state.errors}
           type="email"
           value={values.email}
         />
@@ -160,19 +121,35 @@ export default function ContactForm() {
           name="message"
           onChange={handleChange}
           multiline
+          disabled={state.submitting}
+          serverErrors={state.errors}
           value={values.message}
-        />
-        <input
-          aria-hidden="true"
-          autoComplete="off"
-          className="hidden"
-          name="botcheck"
-          tabIndex={-1}
-          type="checkbox"
         />
 
         <AnimatePresence mode="wait">
-          {submitted ? (
+          {errors.name || errors.email || errors.message ? (
+            <motion.p
+              key="validation"
+              aria-live="polite"
+              className="form-feedback form-error"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+            >
+              Please fix the highlighted fields to continue.
+            </motion.p>
+          ) : state.errors ? (
+            <motion.div
+              key="submission-error"
+              aria-live="polite"
+              className="form-feedback form-error"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+            >
+              <ValidationError errors={state.errors} />
+            </motion.div>
+          ) : submitted ? (
             <motion.div
               key="success"
               aria-live="polite"
@@ -184,41 +161,21 @@ export default function ContactForm() {
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                 <Check size={17} />
               </span>
-              <strong>{submissionMessage}</strong>
+              <strong>
+                Thanks{successName ? `, ${successName}` : ''}! Your message has been sent.
+              </strong>
             </motion.div>
-          ) : submissionStatus === 'error' ? (
-            <motion.p
-              key="submission-error"
-              aria-live="polite"
-              className="form-feedback form-error"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-            >
-              {submissionMessage}
-            </motion.p>
-          ) : errors.name || errors.email || errors.message ? (
-            <motion.p
-              key="validation"
-              aria-live="polite"
-              className="form-feedback form-error"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-            >
-              Please fix the highlighted fields to continue.
-            </motion.p>
           ) : null}
         </AnimatePresence>
 
         <motion.button
           className="gradient-button inline-flex items-center gap-2 justify-self-start rounded-full px-8 py-3 font-semibold"
           type="submit"
-          disabled={submissionStatus === 'sending'}
+          disabled={state.submitting}
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.97 }}
         >
-          {submissionStatus === 'sending' ? 'Sending…' : 'Send message'}
+          {state.submitting ? 'Sending…' : 'Send message'}
           <Send size={16} />
         </motion.button>
       </motion.form>
@@ -233,20 +190,27 @@ function FloatingField({
   multiline = false,
   name,
   onChange,
+  serverErrors,
+  disabled,
   type = 'text',
   value,
 }) {
   const id = `contact-${name}`
-  const errorId = `${id}-error`
+  const errorId = `${id}-server-error`
+  const localErrorId = `${id}-local-error`
+  const hasServerError = Boolean(serverErrors?.getFieldErrors(name).length)
   const commonProps = {
-    'aria-describedby': error ? errorId : undefined,
-    'aria-invalid': Boolean(error),
+    'aria-describedby': [error && localErrorId, hasServerError && errorId]
+      .filter(Boolean)
+      .join(' ') || undefined,
+    'aria-invalid': Boolean(error || hasServerError),
     autoComplete,
     id,
     name,
     onChange,
     placeholder: ' ',
     required: true,
+    disabled,
     value,
   }
 
@@ -254,7 +218,14 @@ function FloatingField({
     <div className="floating-field">
       {multiline ? <textarea {...commonProps} rows="5" /> : <input {...commonProps} type={type} />}
       <label htmlFor={id}>{label}</label>
-      {error && <p className="field-error" id={errorId}>{error}</p>}
+      {error && <p className="field-error" id={localErrorId}>{error}</p>}
+      <ValidationError
+        className="field-error"
+        id={errorId}
+        field={name}
+        errors={serverErrors}
+        prefix={label}
+      />
     </div>
   )
 }
